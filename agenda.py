@@ -1,3 +1,5 @@
+import json
+
 def menu():
     print('''
 ------ AGENDA ELETRÔNICA ------
@@ -10,58 +12,96 @@ SELECIONE UMA DAS OPÇÕES ABAIXO
 [0] - Sair
 ''')
 
-def criarPessoa(pessoas):
+def criarPessoa():
+    try:
+        with open("agenda.json", "r") as arquivo:
+            agenda = json.load(arquivo)
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        agenda = []
+
+    if agenda == []:
+        id = 0
+    else: 
+        id = agenda[-1]["id"] + 1
+
     nome = input("Digite o nome: ").lower()
     cpf = input("Digite o CPF: ")
     telefone = input("Digite o telefone: ")
 
-    pessoas.append([nome, cpf, telefone])
+    pessoa = {"id": id,
+              "nome": nome, 
+              "cpf": cpf, 
+              "telefone": telefone}
+    
+    agenda.append(pessoa)
 
-    with open("agenda.txt","a") as arquivo:
-        for pessoa in pessoas:
-            arquivo.write(f"{pessoa[0],pessoa[1],pessoa[2]}\n")
+    with open("agenda.json", "w") as arquivo:
+        json.dump(agenda, arquivo, indent=4)
 
 def consultarPessoa():
     nome_procurado = input("Digite o nome da pessoa: ")
-    with open("agenda.txt","r") as arquivo:
-        pessoas_lidas = arquivo.readlines()
-    
-    for pessoa in pessoas_lidas:
-        nome_pessoa = pessoa.replace("(","").replace(")","").replace("'","").split(",")[0]
-        cpf_pessoa = pessoa.replace("(","").replace(")","").replace("'","").split(",")[1]
-        telefone_pessoa = pessoa.replace("(","").replace(")","").replace("'","").split(",")[2]
 
-        if nome_procurado == nome_pessoa:
-            print("Pessoa encontrada:")
-            print(f"Nome: {nome_pessoa}, CPF: {cpf_pessoa}, Telefone: {telefone_pessoa}")
-            break
-        else:
-            print("Pessoa não encontrada.")
+    with open("agenda.json","r") as arquivo:
+        agenda = json.load(arquivo)
+
+    pessoas_encontradas = []
+    
+    for pessoa in agenda:
+        if pessoa["nome"] == nome_procurado:
+            pessoas_encontradas.append(pessoa)
+
+    if len(pessoas_encontradas) > 1:
+        print(f"Foram encontradas {len(pessoas_encontradas)} pessoas com esse nome.")
+        for pessoa in pessoas_encontradas:
+            print(f"""
+Nome: {pessoa["nome"]}
+CPF: {pessoa["cpf"]}
+Telefone: {pessoa["telefone"]}""")       
+    elif len(pessoas_encontradas) == 0:
+        print("Não foi encontrada nenhuma pessoa com esse nome.")
+    else:
+        print("Foi encontrado uma pessoa com esse nome.")
+        for pessoa in pessoas_encontradas:
+            print(f"""
+Nome: {pessoa["nome"]}
+CPF: {pessoa["cpf"]}
+Telefone: {pessoa["telefone"]}""")       
 
 def exibirRegistros():
-    with open("agenda.txt","r") as arquivo:
-        pessoas_lidas = arquivo.readlines()
+    with open("agenda.json", "r") as arquivo:
+            agenda = json.load(arquivo)
     
-    for pessoa in pessoas_lidas:
-        nome_pessoa = pessoa.replace("(","").replace(")","").replace("'","").split(",")[0]
-        cpf_pessoa = pessoa.replace("(","").replace(")","").replace("'","").split(",")[1]
-        telefone_pessoa = pessoa.replace("(","").replace(")","").replace("'","").split(",")[2]
-        print(f"Nome: {nome_pessoa}, CPF: {cpf_pessoa}, Telefone: {telefone_pessoa}")
+    for pessoa in agenda:
+        print(f"""
+Nome: {pessoa["nome"]}
+CPF: {pessoa["cpf"]}
+Telefone: {pessoa["telefone"]}""")
 
 def excluirRegistros():
-    with open("agenda.txt","w"):
-        pass
-    print("Os registros foram excluídos com sucesso!")
+    with open("agenda.json","r") as arquivo:
+        agenda = json.load(arquivo)
+
+    nome_procurado = input("Digite o nome da pessoa: ")
+    
+    agenda_nova = []
+    
+    for pessoa in agenda:
+        if pessoa["nome"] == nome_procurado:
+            continue
+        else:
+            agenda_nova.append(pessoa) 
+
+    with open("agenda.json", "w") as arquivo:
+        json.dump(agenda_nova, arquivo, indent=4)
 
 def main():
     opcao = 1
-    pessoas = []
     while True:
         menu()
         opcao = int(input("Informe a opção: "))
         match opcao:
             case 1:
-                criarPessoa(pessoas)
+                criarPessoa()
             case 2:
                 consultarPessoa()
             case 3:
