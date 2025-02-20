@@ -8,9 +8,22 @@ SELECIONE UMA DAS OPÇÕES ABAIXO
 [1] - Adicionar Pessoa
 [2] - Consultar Pessoa
 [3] - Exibir Registros
-[4] - Excluir Registros
+[4] - Excluir Registro
+[5] - Imprimir Nomes
 [0] - Sair
 ''')
+    
+def imprimirNomes():
+
+    try:
+        with open("agenda.json", "r") as arquivo:
+            agenda = json.load(arquivo)
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        agenda = []
+    
+    print("\nNomes registrados:")
+    for pessoa in agenda:
+        print(pessoa["nome"])
 
 def criarPessoa():
     try:
@@ -82,14 +95,33 @@ def excluirRegistros():
         agenda = json.load(arquivo)
 
     nome_procurado = input("Digite o nome da pessoa: ")
-    
+
+    pessoas_encontradas = []
+
+    for pessoa in agenda:
+        if nome_procurado == pessoa["nome"]:
+            pessoas_encontradas.append(pessoa)
+
     agenda_nova = []
     
-    for pessoa in agenda:
-        if pessoa["nome"] == nome_procurado:
-            continue
-        else:
-            agenda_nova.append(pessoa) 
+    if len(pessoas_encontradas) > 1:
+        print(f"{len(pessoas_encontradas)} pessoas foram encontradas com esse nome.")
+        cpf_procurado = input("Digite o cpf da pessoa: ")
+        for pessoa in agenda:
+            if nome_procurado == pessoa["nome"] and cpf_procurado == pessoa["cpf"]:
+                continue
+            else:
+                agenda_nova.append(pessoa)
+    elif len(pessoas_encontradas) == 0:
+        print("Nenhuma pessoa com esse nome foi encontrada.")
+        for pessoa in agenda:
+            agenda_nova.append(pessoa)
+    else:
+        for pessoa in agenda:
+            if pessoa["nome"] == nome_procurado:
+                continue
+            else:
+                agenda_nova.append(pessoa) 
 
     with open("agenda.json", "w") as arquivo:
         json.dump(agenda_nova, arquivo, indent=4)
@@ -108,6 +140,8 @@ def main():
                 exibirRegistros()
             case 4:
                 excluirRegistros()
+            case 5:
+                imprimirNomes()
             case 0:
                 break
             case _:
